@@ -29,7 +29,7 @@ def start(bot, update):
     
 
 
-def send_message_to_pair(bot, update):
+def send_text_message_to_pair(bot, update):
     chat_id = update.message.chat_id
 
     try:
