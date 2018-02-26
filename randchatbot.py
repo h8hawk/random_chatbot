@@ -46,7 +46,7 @@ def main():
     dispatcher = updater.dispatcher
 
     start_handler = CommandHandler(START_COMMAND_STR, start)
-    msg_handler = MessageHandler(Filters.text, send_message_to_pair)
+    msg_handler = MessageHandler(Filters.text, send_text_message_to_pair)
 
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(msg_handler)
