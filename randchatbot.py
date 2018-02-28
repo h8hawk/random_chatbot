@@ -66,7 +66,7 @@ class ChatBot:
 
 
 def main():
-    updater = Updater('346627696:AAEse-Ml2q32ONAgSPep8Dx_8x_SyNRYQOQ')
+    updater = Updater('xxxx')
     dispatcher = updater.dispatcher
 
     chat_bot = ChatBot(threading.Lock)
