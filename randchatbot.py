@@ -1,10 +1,5 @@
-from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
-import telegram
-from random import randint
-import time
 from twowaydict import TwoWayDict
-import threading
 import threading
 
 
@@ -72,10 +67,10 @@ def main():
 
     start_handler = CommandHandler(
         ChatBot.START_COMMAND_STR, chat_bot.start_cmd)
-    
+
     end_handler = CommandHandler(
         ChatBot.END_COMMAND_STR, chat_bot.end_cmd)
-    
+
     msg_handler = MessageHandler(
         Filters.text, chat_bot.send_text_message_to_pair)
 
