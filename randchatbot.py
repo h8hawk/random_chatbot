@@ -7,7 +7,7 @@ from twowaydict import TwoWayDict
 import threading
 import threading
 
-############################################################################################################
+##########################################################################
 
 # Constants
 START_COMMAND_STR = 'start'
@@ -17,30 +17,34 @@ MATCHED_MSG_STR = 'You have matched chat'
 NO_PAIR_MSG = 'You have no pair'
 END_CHAT_MSG = 'Your chat is ended'
 
-############################################################################################################
+##########################################################################
 
 
 class ChatBot:
+
     def __init__(self, lock):
         self._unmatched_users = list()
         self._user_to_user = TwoWayDict()
         self._lock = lock()
 
     def start_cmd(self, bot, update):
-        self._lock.acquire()
         chat_id = update.message.chat_id
         if len(self._unmatched_users) != 0 and self._unmatched_users[0] != chat_id:
+            self._lock.acquire()
             pair_id = self._unmatched_users.pop()
             self._user_to_user[chat_id] = pair_id
+            self._lock.release()
+
             bot.send_message(chat_id, text=MATCHED_MSG_STR)
             bot.send_message(pair_id, text=MATCHED_MSG_STR)
         else:
+            self._lock.acquire()
             self._unmatched_users.append(chat_id)
+            self._lock.release()
+
             bot.send_message(chat_id, WAIT_MSG_STR)
-        self._lock.release()
 
     def send_text_message_to_pair(self, bot, update):
-        self._lock.acquire()
         chat_id = update.message.chat_id
         if chat_id in self._user_to_user:
             pair_id = self._user_to_user[chat_id]
@@ -49,24 +53,24 @@ class ChatBot:
                 text=update.message.text)
         else:
             bot.send_message(chat_id, NO_PAIR_MSG)
-        self._lock.release()
 
-    def end_cmd(bot: telegram.bot.Bot, update: telegram.update.Update):
-        self._lock.acquire()
+    def end_cmd(self, bot, update):
         chat_id = update.message.chat_id
         if chat_id in self._user_to_user:
             pair_id = self._user_to_user[chat_id]
+
+            self._lock.acquire()
             del self._user_to_user[chat_id]
+            self._lock.release()
+
             bot.send_message(chat_id, text=END_CHAT_MSG)
             bot.send_message(pair_id, text=END_CHAT_MSG)
-
         else:
             bot.send_message(chat_id, text=NO_PAIR_MSG)
-        self._lock.release()
 
 
 def main():
-    updater = Updater('xxxx')
+    updater = Updater('TOKEN')
     dispatcher = updater.dispatcher
 
     chat_bot = ChatBot(threading.Lock)
