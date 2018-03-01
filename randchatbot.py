@@ -19,7 +19,7 @@ class ChatBot:
 
     def start_cmd(self, bot, update):
         chat_id = update.message.chat_id
-        if len(self._unmatched_users) != 0 and self._unmatched_users[0] != chat_id:
+        if len(self._unmatched_users) != 0 and not self._is_user_started(chat_id):
             self._lock.acquire()
             pair_id = self._unmatched_users.pop()
             self._user_to_user[chat_id] = pair_id
@@ -28,11 +28,23 @@ class ChatBot:
             bot.send_message(chat_id, text=ChatBot.MATCHED_MSG_STR)
             bot.send_message(pair_id, text=ChatBot.MATCHED_MSG_STR)
         else:
+            if self._is_user_started(chat_id):
+                return
+            
             self._lock.acquire()
             self._unmatched_users.append(chat_id)
             self._lock.release()
-
+            
             bot.send_message(chat_id, ChatBot.WAIT_MSG_STR)
+
+    def _is_user_started(self, user_id):
+        return self._is_user_paired or self._is_user_waiting
+
+    def _is_user_paired(self, user_id):
+        return user_id in self._user_to_user
+
+    def _is_user_waiting(self, user_id):
+        return user_id in self._unmatched_users
 
     def send_text_message_to_pair(self, bot, update):
         chat_id = update.message.chat_id
