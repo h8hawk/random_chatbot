@@ -39,7 +39,7 @@ class ChatBot:
             bot.send_message(chat_id, ChatBot.WAIT_MSG_STR)
 
     def _is_user_started(self, user_id):
-        return self._is_user_paired or self._is_user_waiting
+        return self._is_user_paired(user_id) or self._is_user_waiting(user_id)
 
     def _is_user_paired(self, user_id):
         return user_id in self._user_to_user
