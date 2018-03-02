@@ -16,17 +16,20 @@ class ChatBot:
     def __init__(self):
         self._unmatched_users = list()
         self._user_to_user = TwoWayDict()
-        self._start_lock = threading.Lock()
-        self._end_lock = threading.Lock()
+        self._user_to_user_lock = threading.Lock()
+        self._unmatched_users_lock = threading.Lock()
 
     @run_async
     def start_cmd(self, bot, update):
         chat_id = update.message.chat_id
         if len(self._unmatched_users) != 0 and not self._is_user_started(chat_id):
-            self._start_lock.acquire()
+            self._unmatched_users_lock.acquire()
             pair_id = self._unmatched_users.pop()
+            self._unmatched_users_lock.release()
+            
+            self._user_to_user_lock.acquire()
             self._user_to_user[chat_id] = pair_id
-            self._start_lock.release()
+            self._user_to_user_lock.release()
 
             bot.send_message(chat_id, text=ChatBot.MATCHED_MSG_STR)
             bot.send_message(pair_id, text=ChatBot.MATCHED_MSG_STR)
@@ -34,9 +37,9 @@ class ChatBot:
             if self._is_user_started(chat_id):
                 return
 
-            self._start_lock.acquire()
+            self._unmatched_users_lock.acquire()
             self._unmatched_users.append(chat_id)
-            self._start_lock.release()
+            self._unmatched_users_lock.release()
 
             bot.send_message(chat_id, ChatBot.WAIT_MSG_STR)
 
@@ -66,9 +69,9 @@ class ChatBot:
         if chat_id in self._user_to_user:
             pair_id = self._user_to_user[chat_id]
 
-            self._end_lock.acquire()
+            self._user_to_user_lock.acquire()
             del self._user_to_user[chat_id]
-            self._end_lock.release()
+            self._user_to_user_lock.release()
 
             bot.send_message(chat_id, text=ChatBot.END_CHAT_MSG)
             bot.send_message(pair_id, text=ChatBot.END_CHAT_MSG)
