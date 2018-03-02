@@ -31,11 +31,11 @@ class ChatBot:
         else:
             if self._is_user_started(chat_id):
                 return
-            
+
             self._start_lock.acquire()
             self._unmatched_users.append(chat_id)
             self._start_lock.release()
-            
+
             bot.send_message(chat_id, ChatBot.WAIT_MSG_STR)
 
     def _is_user_started(self, user_id):
