@@ -1,4 +1,5 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackQueryHandler, Filters
+from telegram.ext.dispatcher import run_async
 from twowaydict import TwoWayDict
 import threading
 
@@ -18,6 +19,7 @@ class ChatBot:
         self._start_lock = threading.Lock()
         self._end_lock = threading.Lock()
 
+    @run_async
     def start_cmd(self, bot, update):
         chat_id = update.message.chat_id
         if len(self._unmatched_users) != 0 and not self._is_user_started(chat_id):
@@ -47,6 +49,7 @@ class ChatBot:
     def _is_user_waiting(self, user_id):
         return user_id in self._unmatched_users
 
+    @run_async
     def send_text_message_to_pair(self, bot, update):
         chat_id = update.message.chat_id
         if chat_id in self._user_to_user:
@@ -57,6 +60,7 @@ class ChatBot:
         else:
             bot.send_message(chat_id, ChatBot.NO_PAIR_MSG)
 
+    @run_async
     def end_cmd(self, bot, update):
         chat_id = update.message.chat_id
         if chat_id in self._user_to_user:
@@ -73,7 +77,7 @@ class ChatBot:
 
 
 def main():
-    updater = Updater('TOKEN')
+    updater = Updater(token='TOKEN')
     dispatcher = updater.dispatcher
 
     chat_bot = ChatBot()
