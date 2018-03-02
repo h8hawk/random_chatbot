@@ -12,18 +12,19 @@ class ChatBot:
     NO_PAIR_MSG = 'You have no pair'
     END_CHAT_MSG = 'Your chat is ended'
 
-    def __init__(self, lock):
+    def __init__(self):
         self._unmatched_users = list()
         self._user_to_user = TwoWayDict()
-        self._lock = lock()
+        self._start_lock = threading.Lock()
+        self._end_lock = threading.Lock()
 
     def start_cmd(self, bot, update):
         chat_id = update.message.chat_id
         if len(self._unmatched_users) != 0 and not self._is_user_started(chat_id):
-            self._lock.acquire()
+            self._start_lock.acquire()
             pair_id = self._unmatched_users.pop()
             self._user_to_user[chat_id] = pair_id
-            self._lock.release()
+            self._start_lock.release()
 
             bot.send_message(chat_id, text=ChatBot.MATCHED_MSG_STR)
             bot.send_message(pair_id, text=ChatBot.MATCHED_MSG_STR)
@@ -31,9 +32,9 @@ class ChatBot:
             if self._is_user_started(chat_id):
                 return
             
-            self._lock.acquire()
+            self._start_lock.acquire()
             self._unmatched_users.append(chat_id)
-            self._lock.release()
+            self._start_lock.release()
             
             bot.send_message(chat_id, ChatBot.WAIT_MSG_STR)
 
@@ -61,9 +62,9 @@ class ChatBot:
         if chat_id in self._user_to_user:
             pair_id = self._user_to_user[chat_id]
 
-            self._lock.acquire()
+            self._end_lock.acquire()
             del self._user_to_user[chat_id]
-            self._lock.release()
+            self._end_lock.release()
 
             bot.send_message(chat_id, text=ChatBot.END_CHAT_MSG)
             bot.send_message(pair_id, text=ChatBot.END_CHAT_MSG)
@@ -75,7 +76,7 @@ def main():
     updater = Updater('TOKEN')
     dispatcher = updater.dispatcher
 
-    chat_bot = ChatBot(threading.Lock)
+    chat_bot = ChatBot()
 
     start_handler = CommandHandler(
         ChatBot.START_COMMAND_STR, chat_bot.start_cmd)
